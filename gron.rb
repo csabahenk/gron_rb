@@ -1,19 +1,37 @@
 module Gron
 
-  def self.gron tree, cursor=[], &cbk
-    if Enumerable === tree
-      cbk.call cursor, tree.class.new
-      case tree
-      when Hash
-        tree.each{|k,v| gron v, cursor+[k], &cbk }
-      when Array
-        tree.each_with_index{|v,i| gron v, cursor+[i], &cbk }
-      else raise TypeError "can't handle class #{tree.class}"
+  class Gron
+
+    private_class_method def self.gron tree, cursor=[], &cbk
+      if Enumerable === tree
+        cbk.call cursor, tree.class.new
+        case tree
+        when Hash
+          tree.each{|k,v| gron v, cursor+[k], &cbk }
+        when Array
+          tree.each_with_index{|v,i| gron v, cursor+[i], &cbk }
+        else raise TypeError "can't handle class #{tree.class}"
+        end
+      else
+        cbk.call cursor, tree
       end
-    else
-      cbk.call cursor, tree
+      nil
     end
-    nil
+
+    def initialize tree
+      @tree = tree
+    end
+
+    def gron &cbk
+      return to_enum(__method__) unless cbk
+
+      self.class.send :gron, @tree, [], &cbk
+    end
+
+  end
+
+  def self.gron tree, &cbk
+    Gron.new(tree).gron &cbk
   end
 
 end
