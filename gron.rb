@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 module Gron
 
   class Gron
@@ -40,40 +42,47 @@ module Gron
       @tree = {root: nil}
     end
 
-    def callback
-      proc do |cursor, entry|
-        if Enumerable === entry and ![{},[]].include? entry
-          raise ArgumentError, "invalid #{entry.class} entry" + case entry
-          when Array, Hash
-            " of size #{entry.size} (should be empty)"
-          else
-            ": should be Hash or Array"
-          end
-        end
-
-        subtree = @tree
-        xc = [:root] + cursor
-        xc[0...-1].each_with_index { |k,i|
-          subtree[k] ||= case xc[i+1]
-          when Integer
-            []
-          else
-            {}
-          end
-          subtree = subtree[k]
-        }
-        leaf = subtree[xc.last]
-        if leaf
-          unless leaf.class === entry
-            raise TypeError, "entry at #{cursor} is a #{leaf.class}, cannot be changed to #{entry.class}"
-          end
-          if !Enumerable === entry and leaf != entry
-            raise ArgumentError, "identity of entry at #{cursor} is already set"
-          end
+    def push cursor, entry
+      if Enumerable === entry and ![{},[]].include? entry
+        raise ArgumentError, "invalid #{entry.class} entry" + case entry
+        when Array, Hash
+          " of size #{entry.size} (should be empty)"
         else
-          subtree[xc.last] = entry
+          ": should be Hash or Array"
         end
       end
+
+      subtree = @tree
+      xc = [:root] + cursor
+      xc[0...-1].each_with_index { |k,i|
+        subtree[k] ||= case xc[i+1]
+        when Integer
+          []
+        else
+          {}
+        end
+        subtree = subtree[k]
+      }
+      leaf = subtree[xc.last]
+      if leaf
+        unless leaf.class === entry
+          raise TypeError, "entry at #{cursor} is a #{leaf.class}, cannot be changed to #{entry.class}"
+        end
+        if !Enumerable === entry and leaf != entry
+          raise ArgumentError, "identity of entry at #{cursor} is already set"
+        end
+      else
+        subtree[xc.last] = entry
+      end
+      self
+    end
+
+    def callback
+      proc { |a| push *a; nil }
+    end
+
+    def << pr
+      push *pr
     end
 
     def tree
@@ -86,6 +95,27 @@ module Gron
     u = Ungron.new
     enum.each &u.callback
     u.tree
+  end
+
+end
+
+if __FILE__ == $0
+
+  require 'optparse'
+  require 'json'
+
+  ung = false
+  OptionParser.new do |o|
+    o.on("--ungron", "-u", "Reverse the operation (turn assignments back into JSON)") { ung = true }
+  end.parse!
+
+  case ung
+  when false
+    Gron.gron(JSON.load $<) { |*pr| puts pr.to_json }
+  when true
+    u = Gron::Ungron.new
+    $<.each { |l| u << JSON.load(l) }
+    puts u.tree.to_json
   end
 
 end
