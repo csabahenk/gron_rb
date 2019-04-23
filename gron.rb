@@ -34,4 +34,44 @@ module Gron
     Gron.new(tree).gron &cbk
   end
 
+  def self.ungron enum
+    tree = {root: nil}
+    enum.each do |cursor, entry|
+      if Enumerable === entry and ![{},[]].include? entry
+        raise ArgumentError, "invalid #{entry.class} entry" + case entry
+        when Array, Hash
+          " of size #{entry.size} (should be empty)"
+        else
+          ": should be Hash or Array"
+        end
+      end
+
+      stree = tree
+      ([:root] + cursor).then do |xc|
+        xc[0...-1].each_with_index { |k,i|
+          stree[k] ||= case xc[i+1]
+          when Integer
+            []
+          else
+            {}
+          end
+          stree = stree[k]
+        }
+        leaf = stree[xc.last]
+        if leaf
+          unless leaf.class === entry
+            raise TypeError, "entry at #{cursor} is a #{leaf.class}, cannot be changed to #{entry.class}"
+          end
+          if !Enumerable === entry and leaf != entry
+            raise ArgumentError, "identity of entry at #{cursor} is already set"
+          end
+        else
+          stree[xc.last] = entry
+        end
+      end
+    end
+
+    tree[:root]
+  end
+
 end
