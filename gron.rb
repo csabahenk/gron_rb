@@ -2,11 +2,13 @@
 
 module Gron
 
+  PRUNE = :prune
+
   class Gron
 
     private_class_method def self.gron tree, cursor=[], &cbk
       if Enumerable === tree
-        cbk.call cursor, tree.class.new
+        return if cbk.call(cursor, tree.class.new) == PRUNE
         case tree
         when Hash
           tree.each{|k,v| gron v, cursor+[k], &cbk }
