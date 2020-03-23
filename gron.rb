@@ -42,6 +42,7 @@ module Gron
 
     def initialize
       @tree = {root: nil}
+      yield self if block_given?
     end
 
     def push cursor, entry
