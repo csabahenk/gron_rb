@@ -88,6 +88,11 @@ module Gron
       push *pr
     end
 
+    def splat cursor, obj
+      ::Gron.gron(obj) { |c,v| push cursor + c, v }
+      self
+    end
+
     def tree
       @tree[:root]
     end
