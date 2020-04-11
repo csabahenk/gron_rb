@@ -71,7 +71,7 @@ module Gron
         unless leaf.class === entry
           raise TypeError, "entry at #{cursor} is a #{leaf.class}, cannot be changed to #{entry.class}"
         end
-        if !Enumerable === entry and leaf != entry
+        if not Enumerable === entry and leaf != entry
           raise ArgumentError, "identity of entry at #{cursor} is already set"
         end
       else
