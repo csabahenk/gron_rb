@@ -2,7 +2,8 @@
 
 module Gron
 
-  PRUNE = :prune
+  module PRUNE
+  end
 
   class Gron
 
