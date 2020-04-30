@@ -7,36 +7,44 @@ module Gron
 
   class Gron
 
-    private_class_method def self.gron tree, cursor=[], &cbk
+    private_class_method def self.gron tree, context: nil, cursor: [], &cbk
       if Enumerable === tree
-        return if cbk.call(cursor, tree.class.new) == PRUNE
+        return if cbk.call(cursor, tree.class.new, *[context].compact) == PRUNE
         case tree
         when Hash
-          tree.each{|k,v| gron v, cursor+[k], &cbk }
+          tree.each{|k,v| gron v, context: context, cursor: cursor+[k], &cbk }
         when Array
-          tree.each_with_index{|v,i| gron v, cursor+[i], &cbk }
+          tree.each_with_index{|v,i| gron v, context: context, cursor: cursor+[i], &cbk }
         else raise TypeError "can't handle class #{tree.class}"
         end
       else
-        cbk.call cursor, tree
+        cbk.call cursor, tree, *[context].compact
       end
-      nil
+      context
     end
 
     def initialize tree
       @tree = tree
     end
 
-    def gron &cbk
+    def get cursor
+      [@tree].dig 0, *cursor
+    end
+    alias_method :[], :get
+
+    module Self
+    end
+
+    def gron context: Self, &cbk
       return to_enum(__method__) unless cbk
 
-      self.class.send :gron, @tree, [], &cbk
+      self.class.send :gron, @tree, context: (context == Self ? self : context), cursor: [], &cbk
     end
 
   end
 
-  def self.gron tree, &cbk
-    Gron.new(tree).gron &cbk
+  def self.gron tree, context: nil, &cbk
+    Gron.new(tree).gron context: context, &cbk
   end
 
   class Ungron
