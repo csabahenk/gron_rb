@@ -89,6 +89,23 @@ module Gron
       self
     end
 
+    # XXX experimental
+    def push! cursor, entry
+      subtree = @tree
+      xc = [:root] + cursor
+      xc[0...-1].each_with_index { |k,i|
+        subtree[k] ||= case xc[i+1]
+        when Integer
+          []
+        else
+          {}
+        end
+        subtree = subtree[k]
+      }
+      subtree[xc.last] = entry
+      self
+    end
+
     def callback
       proc { |a| push *a; nil }
     end
