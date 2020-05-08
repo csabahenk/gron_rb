@@ -26,6 +26,10 @@ module Gron
       @tree = tree
     end
 
+    def dig *cursor
+      @tree.dig *cursor
+    end
+
     def get cursor
       [@tree].dig 0, *cursor
     end
@@ -36,6 +40,14 @@ module Gron
     def gron with: Self, &cbk
       return to_enum(__method__) unless cbk
 
+      with = case with
+      when Array,Hash
+        Ungron.new do |u|
+          self.class.new(with).gron { |c,v| u.push c, v == :self ? self : v }
+        end.tree
+      else
+        with
+      end
       self.class.send :gron, @tree, with: (with == Self ? self : with), cursor: [], &cbk
     end
 
