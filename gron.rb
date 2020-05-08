@@ -2,8 +2,7 @@
 
 module Gron
 
-  module PRUNE
-  end
+  PRUNE = :prune
 
   class Gron
 
@@ -32,8 +31,7 @@ module Gron
     end
     alias_method :[], :get
 
-    module Self
-    end
+    Self = :self
 
     def gron context: Self, &cbk
       return to_enum(__method__) unless cbk
