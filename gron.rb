@@ -38,7 +38,7 @@ module Gron
     Self = :self
 
     def gron with: Self, &cbk
-      return to_enum(__method__) unless cbk
+      return to_enum(__method__, with: with) unless cbk
 
       with = case with
       when Array,Hash
