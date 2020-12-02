@@ -8,7 +8,7 @@ module Gron
 
     private_class_method def self.gron tree, with: nil, cursor: [], &cbk
       if Enumerable === tree
-        return if cbk.call(cursor, tree.class.new, *[with].compact) == PRUNE
+        return with if cbk.call(cursor, tree.class.new, *[with].compact) == PRUNE
         case tree
         when Hash
           tree.each{|k,v| gron v, with: with, cursor: cursor+[k], &cbk }
